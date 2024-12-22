@@ -1,0 +1,40 @@
+name: Lint Node.js Server
+
+on:
+  push:
+    branches:
+      - '**' # Triggers on all branches
+  pull_request:
+    branches:
+      - '**' # Triggers on PRs to all branches
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3 # Use latest v3 for checkout
+
+      # Set up Node.js with a compatible version
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20' # Set a compatible Node.js version
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          yarn # Use yarn to install dependencies from yarn.lock (recommended for CI/CD)
+
+      - name: Install esbuild
+        run: yarn add esbuild@0.23.1
+
+      # Run ESLint
+      - name: Run ESLint
+        run: yarn run lint # Assumes you have a lint script in package.json
+
+        # Run Jest tests
+      - name: Run Jest tests
+        run: yarn test # Runs the `jest` command
