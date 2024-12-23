@@ -42,6 +42,7 @@
 </template>
 
 <script setup>
+import { useThemeStore } from "@/store/useThemeStore";
 import { setItem } from "@/utils/storage/localStorage";
 import { ref } from "vue";
 import { useTheme } from "vuetify";
@@ -50,10 +51,12 @@ import { useDisplay } from "vuetify/lib/framework.mjs";
 const theme = useTheme();
 
 const isDark = theme.global.name;
+const themeStore = useThemeStore();
 
 function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? "light" : "dark";
   setItem("theme", theme.global.name.value);
+  themeStore.toggleTheme();
 }
 
 const navItems = [
