@@ -3,9 +3,7 @@
     <template v-slot:activator="{ props }">
       <v-btn icon v-bind="props">
         <v-avatar color="brown" size="large">
-          <span class="text-h5">{{
-            userStore.user?.firstName?.substring(2)
-          }}</span>
+          <span class="text-h5">{{ userStore.user?.firstName?.slice(2) }}</span>
         </v-avatar>
       </v-btn>
     </template>
@@ -14,7 +12,7 @@
         <div class="mx-auto text-center">
           <v-avatar color="brown">
             <span class="text-h5">{{
-              userStore.user?.firstName?.substring(2)
+              userStore.user?.firstName?.slice(2)
             }}</span>
           </v-avatar>
           <h3>{{ userStore.user.firstName }}</h3>
@@ -26,7 +24,9 @@
             Create Hackathon
           </v-btn>
           <v-divider class="my-3"></v-divider>
-          <v-btn variant="text" rounded to="/"> Log Out </v-btn>
+          <v-btn variant="text" rounded to="/" @click="userStore.logout">
+            Log Out
+          </v-btn>
         </div>
       </v-card-text>
     </v-card>

@@ -1,6 +1,5 @@
-import { User } from "@/types";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { getItem } from "./storage/localStorage";
+import { getItem, getUserFromLS } from "./storage/localStorage";
 
 axios.defaults.baseURL = "http://localhost:4000";
 
@@ -44,12 +43,6 @@ async function request<T>(
   }
 }
 
-const isUserAuthenticated = () => {
-  const user = getItem("user");
-  if (!user) return undefined;
-  return JSON.parse(user) as User;
-};
-
 const requestHandler = async <R>(
   method: Method,
   url: string,
@@ -67,7 +60,7 @@ const requestHandler = async <R>(
   const headers = {};
   const requestObj = { method, url, headers, ...options };
   const token = getItem("token");
-  const user = isUserAuthenticated();
+  const user = getUserFromLS();
   if (user && user.id && token) {
     requestObj.headers = {
       ...requestObj.headers,

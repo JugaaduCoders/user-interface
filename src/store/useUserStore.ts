@@ -1,7 +1,13 @@
 import { User } from "@/types";
 import { SignUpFormData } from "@/types/signup";
 import { request, requestHandler } from "@/utils/request";
-import { getItem, removeItem, setItem } from "@/utils/storage/localStorage";
+import {
+  getTokenFromLS,
+  getUserFromLS,
+  removeItem,
+  setItem,
+  setUserInLS,
+} from "@/utils/storage/localStorage";
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { useMessageStore } from "./useMessageStore";
@@ -18,10 +24,9 @@ interface LoginPayload {
 
 interface UpdatePasswordPayload {
   password: string;
-  repassword: string;
+  rePassword: string;
 }
 
-// Define the store
 export const useUserStore = defineStore("user", {
   state: (): UserState =>
     reactive({
@@ -36,7 +41,7 @@ export const useUserStore = defineStore("user", {
   },
 
   actions: {
-    async init() {
+    init() {
       if (typeof window !== "undefined") {
         this.checkLocalToken();
       }
@@ -44,18 +49,20 @@ export const useUserStore = defineStore("user", {
 
     async checkLocalToken() {
       if (typeof window !== "undefined") {
-        const token = getItem("token");
-        if (token) {
-          await requestHandler<User>("GET", "/api/user").then((res) => {
-            if (res) {
-              this.user = res.payload;
-              this.token = token;
-              setItem("user", JSON.stringify(this.user));
-            } else {
-              this.logout();
+        const token = getTokenFromLS();
+        this.token = token ?? "";
+        let user = getUserFromLS();
+        setUserInLS(user);
+        if (token && user && user.id) {
+          await requestHandler<User>("GET", "/api/user/" + user.id).then(
+            (res) => {
+              if (res.success) {
+                user = res.payload;
+                setUserInLS(user);
+              }
             }
-          });
-        }
+          );
+        } else this.logout();
       }
     },
 
@@ -103,7 +110,7 @@ export const useUserStore = defineStore("user", {
       let response = false;
       let error = "";
 
-      if (payload?.password !== payload?.repassword) {
+      if (payload?.password !== payload?.rePassword) {
         error = "Password and Re-password must be the same!";
       } else if (payload?.password.length < 5) {
         error = "Password must be at least 5 characters!";

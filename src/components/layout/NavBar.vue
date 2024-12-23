@@ -2,18 +2,24 @@
   <v-app-bar app>
     <v-app-bar-title> MyApp </v-app-bar-title>
     <v-spacer></v-spacer>
-    <v-btn icon @click="toggleTheme">
-      <v-icon>{{
-        isDark === "dark"
-          ? "mdi-white-balance-sunny"
-          : "mdi-moon-waxing-crescent"
-      }}</v-icon>
-    </v-btn>
+    <v-tooltip
+      :text="`Switch to ${isDark === 'light' ? 'Dark mode' : 'Light mode'}`"
+      location="top"
+    >
+      <template v-slot:activator="{ props }">
+        <v-btn v-bind="props" icon @click="toggleTheme">
+          <v-icon>{{
+            isDark === "dark"
+              ? "mdi-white-balance-sunny"
+              : "mdi-moon-waxing-crescent"
+          }}</v-icon>
+        </v-btn>
+      </template>
+    </v-tooltip>
     <v-btn class="mx-2" text to="/" v-show="!xs"> Home </v-btn>
     <v-btn v-if="!userStore.token" text to="/login" v-show="!xs">Login</v-btn>
     <v-btn v-if="!userStore.token" text to="/signup" v-show="!xs">Signup</v-btn>
-
-    <profile-icon></profile-icon>
+    <profile-icon v-if="userStore.token"></profile-icon>
     <v-app-bar-nav-icon
       @click="mobileDrawer = !mobileDrawer"
       v-show="xs"
@@ -70,28 +76,3 @@ const mobileDrawer = ref(false);
 
 const { xs } = useDisplay();
 </script>
-
-<style scoped>
-.nav-title {
-  text-decoration: none;
-  color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.mobile-link {
-  text-decoration: none;
-  color: inherit;
-  font-size: 1.2rem;
-}
-
-.v-btn {
-  text-transform: none;
-}
-
-@media (max-width: 600px) {
-  .nav-title {
-    font-size: 1.2rem;
-  }
-}
-</style>

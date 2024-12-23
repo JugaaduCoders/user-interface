@@ -7,6 +7,7 @@ import * as directives from "vuetify/directives";
 import "vuetify/styles";
 import App from "./App.vue";
 import router from "./router";
+import { useUserStore } from "./store/useUserStore";
 import { getItem } from "./utils/storage/localStorage";
 
 const app = createApp(App).use(router);
@@ -16,6 +17,8 @@ const pinia = createPinia();
 const theme = getItem("theme");
 
 app.use(pinia);
+
+useUserStore().init();
 
 const vuetify = createVuetify({
   components,
