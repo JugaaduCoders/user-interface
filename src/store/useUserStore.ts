@@ -1,4 +1,6 @@
+import { SignUpFormData } from "@/types/signup";
 import { request } from "@/utils/request";
+import { getItem, removeItem, setItem } from "@/utils/storage/localStorage";
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { useMessageStore } from "./useMessageStore";
@@ -6,7 +8,7 @@ import { useMessageStore } from "./useMessageStore";
 // Define types for state
 interface User {
   _id?: string;
-  [key: string]: any; // For additional dynamic properties
+  [key: string]: any;
 }
 
 interface UserState {
@@ -14,16 +16,9 @@ interface UserState {
   token: string;
 }
 
-// Define types for payloads
 interface LoginPayload {
   email: string;
   password: string;
-}
-
-interface SignupPayload {
-  email: string;
-  password: string;
-  [key: string]: any; // For additional fields
 }
 
 interface UpdatePasswordPayload {
@@ -54,14 +49,14 @@ export const useUserStore = defineStore("user", {
 
     async checkLocalToken() {
       if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
+        const token = getItem("token");
 
         if (token) {
-          await request("get", "/api/user").then((res) => {
+          await request("GET", "/api/user").then((res) => {
             if (res) {
-              this.user = { ...res };
+              // this.user = { ...res };
               this.token = token;
-              localStorage.setItem("user", JSON.stringify(this.user));
+              setItem("user", JSON.stringify(this.user));
             } else {
               this.logout();
             }
@@ -70,43 +65,25 @@ export const useUserStore = defineStore("user", {
       }
     },
 
-    async login(payload: LoginPayload): Promise<boolean> {
-      let response = false;
-
-      await request("post", "/api/auth/signin", payload).then((res) => {
-        if (res) {
-          this.user = { ...res };
-          localStorage.setItem("user", JSON.stringify(this.user));
-
-          if (res?.accessToken) {
-            localStorage.setItem("token", res.accessToken);
-            this.token = res.accessToken;
-            response = true;
-          }
-        }
-      });
-
-      return response;
+    async login(payload: LoginPayload) {
+      const resp = await request<{ authToken: string; user: User }>(
+        "POST",
+        "/api/auth/login",
+        payload
+      );
+      return resp;
     },
 
     async logout() {
       this.token = "";
       this.user = {} as User;
 
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      removeItem("token");
+      removeItem("user");
     },
 
-    async signup(payload: SignupPayload): Promise<boolean> {
-      let response = false;
-
-      await request("post", "/api/auth/signup", payload).then((res) => {
-        if (res) {
-          response = true;
-        }
-      });
-
-      return response;
+    async signup(payload: SignUpFormData) {
+      const res = await request("POST", "/api/auth/signup", payload);
     },
 
     async updatePassword(
@@ -126,11 +103,11 @@ export const useUserStore = defineStore("user", {
         return;
       }
 
-      await request("put", "/api/user/update", payload).then((res) => {
+      await request("PUT", "/api/user/update", payload).then((res) => {
         if (res) {
           response = true;
-          this.token = res;
-          localStorage.setItem("token", res);
+          this.token = "res";
+          setItem("token", res);
         }
       });
 
