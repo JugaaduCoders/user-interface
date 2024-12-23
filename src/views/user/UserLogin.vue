@@ -4,6 +4,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { regexEmail } from "@/utils/regex";
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useTheme } from "vuetify/lib/framework.mjs";
 
 const route = useRoute();
 const router = useRouter();
@@ -15,10 +16,6 @@ const visibleEye = ref(true);
 const isSubmitting = ref(false);
 const remember = ref("false");
 const formData = ref({ email: "c", password: "" });
-
-const submit = () => {
-  console.log(formData.value.email, formData.value.password, remember.value);
-};
 
 const login = () => {
   isSubmitting.value = true;
@@ -51,6 +48,8 @@ const login = () => {
     }
   });
 };
+const theme = useTheme();
+console.log(theme.global.name);
 </script>
 
 <template>
@@ -94,7 +93,12 @@ const login = () => {
       </v-row>
       <v-row align="center" justify="center">
         <div class="col-sm-12">
-          <v-btn density="default" type="submit">Submit </v-btn>
+          <v-btn
+            density="default"
+            type="submit"
+            color="theme.global.name === 'light' ? 'primary' : 'default' "
+            >Submit
+          </v-btn>
         </div>
       </v-row>
     </form>
