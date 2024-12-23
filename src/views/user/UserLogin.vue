@@ -1,5 +1,6 @@
 <script setup>
 import { useUserStore } from "@/store/useUserStore";
+import { validateEmail } from "@/utils/regex";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import MyButton from "../../components/MyButton.vue";
@@ -12,13 +13,21 @@ const visibleEye = ref(true);
 const isSubmitting = ref(false);
 const remember = ref("false");
 const formData = ref({ email: "", password: "" });
+const emailError = ref("");
 
 const login = () => {
+  emailError.value = "";
+
+  if (!validateEmail(formData.value.email)) {
+    emailError.value = "Invalid email address.";
+    return;
+  }
+
   isSubmitting.value = true;
 
   userStore.login({ ...formData.value }).then((res) => {
-    if (res) {
-      router.push("/user");
+    if (res.success) {
+      router.push("/admin");
     } else {
       isSubmitting.value = false;
     }
@@ -39,6 +48,8 @@ const login = () => {
           id="email"
           variant="underlined"
           v-model="formData.email"
+          :error="!!emailError"
+          :error-messages="emailError"
         ></v-text-field>
       </v-col>
     </v-row>

@@ -1,39 +1,10 @@
+import { User } from "@/types";
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { Ref, ref } from "vue";
 import { getItem } from "./storage/localStorage";
 
-interface UseFetchReturn<T> {
-  data: Ref<T | undefined>;
-  error: Ref<string | undefined>;
-  pending: Ref<boolean>;
-  fetchData: () => Promise<void>;
-}
+axios.defaults.baseURL = "http://localhost:4000";
 
-export function useFetch<T = any>(
-  url: string,
-  config: AxiosRequestConfig = {}
-): UseFetchReturn<T> {
-  const data: Ref<T | undefined> = ref(undefined);
-  const error: Ref<string | undefined> = ref(undefined);
-  const pending: Ref<boolean> = ref(false);
-
-  const fetchData = async () => {
-    pending.value = true;
-    error.value = undefined;
-
-    try {
-      const response: AxiosResponse<T> = await axios({ url, ...config });
-      data.value = response.data;
-    } catch (err: any) {
-      error.value =
-        err.response?.data?.message || err.message || "An error occurred";
-    } finally {
-      pending.value = false;
-    }
-  };
-
-  return { data, error, pending, fetchData };
-}
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 async function request<T>(
   type: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
@@ -44,7 +15,6 @@ async function request<T>(
   const url = `${baseUrl}${apiRoute}`;
   const token = getItem("token");
 
-  // Configuring headers
   const headers: Record<string, string> = {
     Authorization: token ? `Bearer ${token}` : "",
     "Content-Type": "application/json",
@@ -74,4 +44,86 @@ async function request<T>(
   }
 }
 
-export { request };
+const isUserAuthenticated = () => {
+  const user = getItem("user");
+  if (!user) return undefined;
+  return JSON.parse(user) as User;
+};
+
+const requestHandler = async <R>(
+  method: Method,
+  url: string,
+  data?: unknown,
+  options: AxiosRequestConfig = {},
+  defaultResponse = false
+): Promise<{
+  success: boolean;
+  status: number;
+  payload: R;
+  error?: Error;
+  message?: string;
+}> => {
+  let response;
+  const headers = {};
+  const requestObj = { method, url, headers, ...options };
+  const token = getItem("token");
+  const user = isUserAuthenticated();
+  if (user && user.id && token) {
+    requestObj.headers = {
+      ...requestObj.headers,
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
+  if (data) requestObj.data = data;
+  try {
+    const res = await axios(requestObj);
+    if (res.data && res.data.authError) {
+      if (token) window.location.reload();
+    }
+    if (defaultResponse)
+      response = {
+        ...res,
+        success:
+          res.data instanceof ArrayBuffer
+            ? res.headers["x-success-status"] === "true"
+            : res.data.success,
+      };
+    else {
+      response = {
+        ...res.data,
+        status: res.status,
+        headers: res.headers,
+        error: null,
+      };
+    }
+  } catch (error: any) {
+    if (error?.response) {
+      response = {
+        ...error.response.data,
+        status: error.response.status,
+        headers: error.response.headers,
+        error: "Server responded with an error",
+        success: false,
+      };
+    } else if (error.request) {
+      response = {
+        ...error.request,
+        error: "Request Timeout",
+        success: false,
+      };
+    } else {
+      response = {
+        errMsg: error.message,
+        error: "Client Error: Bad Request",
+        success: false,
+      };
+    }
+    if (response.payload && response.payload.authError) {
+      window.location.reload();
+    }
+  }
+  return response;
+};
+
+export { request, requestHandler };

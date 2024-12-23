@@ -1,15 +1,10 @@
+import { User } from "@/types";
 import { SignUpFormData } from "@/types/signup";
-import { request } from "@/utils/request";
+import { request, requestHandler } from "@/utils/request";
 import { getItem, removeItem, setItem } from "@/utils/storage/localStorage";
 import { defineStore } from "pinia";
 import { reactive } from "vue";
 import { useMessageStore } from "./useMessageStore";
-
-// Define types for state
-interface User {
-  _id?: string;
-  [key: string]: any;
-}
 
 interface UserState {
   user: User;
@@ -36,7 +31,7 @@ export const useUserStore = defineStore("user", {
 
   getters: {
     getUser: (state): User => state.user,
-    getUserId: (state): string => state.user?._id || "",
+    getUserId: (state): number => state.user.id,
     getToken: (state): string => state.token || "",
   },
 
@@ -50,11 +45,10 @@ export const useUserStore = defineStore("user", {
     async checkLocalToken() {
       if (typeof window !== "undefined") {
         const token = getItem("token");
-
         if (token) {
-          await request("GET", "/api/user").then((res) => {
+          await requestHandler<User>("GET", "/api/user").then((res) => {
             if (res) {
-              // this.user = { ...res };
+              this.user = res.payload;
               this.token = token;
               setItem("user", JSON.stringify(this.user));
             } else {
@@ -66,24 +60,41 @@ export const useUserStore = defineStore("user", {
     },
 
     async login(payload: LoginPayload) {
-      const resp = await request<{ authToken: string; user: User }>(
+      const resp = await requestHandler<{ authToken: string; user: User }>(
         "POST",
         "/api/auth/login",
         payload
       );
+      if (resp.success) {
+        const { payload } = resp;
+        this.user = payload.user;
+        this.token = payload.authToken;
+        setItem("user", JSON.stringify(payload.user));
+        setItem("token", payload.authToken);
+      }
       return resp;
     },
 
     async logout() {
       this.token = "";
       this.user = {} as User;
-
       removeItem("token");
       removeItem("user");
     },
 
     async signup(payload: SignUpFormData) {
-      const res = await request("POST", "/api/auth/signup", payload);
+      const res = await requestHandler<{ authToken: string; user: User }>(
+        "POST",
+        "/api/auth/signup",
+        payload
+      );
+      if (res.success) {
+        const { payload } = res;
+        this.user = payload.user;
+        this.token = payload.authToken;
+        setItem("user", JSON.stringify(payload.user));
+        setItem("token", payload.authToken);
+      }
     },
 
     async updatePassword(
