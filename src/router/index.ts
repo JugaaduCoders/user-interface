@@ -4,9 +4,8 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "Home",
-    // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "Login" */ "../views/HomePage.vue"),
+      import(/* webpackChunkName: "Home" */ "../views/HomePage.vue"),
   },
   {
     path: "/signup",
@@ -17,9 +16,16 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/login",
     name: "Login",
-    // which is lazy-loaded when the route is visited.
     component: () =>
       import(/* webpackChunkName: "Login" */ "../views/user/UserLogin.vue"),
+  },
+  {
+    path: "/create-hackathon",
+    name: "CreateHackathon",
+    component: () =>
+      import(
+        /* webpackChunkName: "LoCreateHackathon" */ "../views/admin/CreateHackathon.vue"
+      ),
   },
 ];
 
