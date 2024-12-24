@@ -3,10 +3,10 @@ name: Lint Node.js Server
 on:
   push:
     branches:
-      - '**' # Triggers on all branches
+      - "**" # Triggers on all branches
   pull_request:
     branches:
-      - '**' # Triggers on PRs to all branches
+      - "**" # Triggers on PRs to all branches
 
 jobs:
   lint:
@@ -21,7 +21,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20' # Set a compatible Node.js version
+          node-version: "20" # Set a compatible Node.js version
 
       # Install dependencies
       - name: Install dependencies
@@ -35,4 +35,3 @@ jobs:
       - name: Run ESLint
         run: yarn run lint # Assumes you have a lint script in package.json
 
-       
